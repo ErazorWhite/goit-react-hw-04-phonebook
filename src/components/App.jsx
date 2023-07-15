@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from 'components/Filter/Filter';
@@ -41,29 +41,27 @@ export const App = () => {
   };
 
   const normalizedFilter = filter.toLowerCase();
-  const filteredContacts = contacts.filter(contact =>
+  const filteredContacts = useMemo(() => (contacts.filter(contact =>
     contact.name.toLowerCase().includes(normalizedFilter)
-  );
+  )), [contacts, normalizedFilter]);
 
   return (
-    <>
-      <div style={{ padding: '20px' }}>
-        <ToastContainer />
-        <h1>Phonebook</h1>
-        <ContactForm createPhoneBookEntry={createPhoneBookEntry} />
-        <h2>Contacts</h2>
-        {contacts.length ? (
-          <>
-            <Filter onChange={handleSearchByName} />
-            <ContactList
-              contacts={filteredContacts}
-              deletePhoneBookEntry={deletePhoneBookEntry}
-            />
-          </>
-        ) : (
-          <p>There are no contacts!</p>
-        )}
-      </div>
-    </>
+    <div style={{ padding: '20px' }}>
+      <ToastContainer />
+      <h1>Phonebook</h1>
+      <ContactForm createPhoneBookEntry={createPhoneBookEntry} />
+      <h2>Contacts</h2>
+      {contacts.length ? (
+        <>
+          <Filter onChange={handleSearchByName} />
+          <ContactList
+            contacts={filteredContacts}
+            deletePhoneBookEntry={deletePhoneBookEntry}
+          />
+        </>
+      ) : (
+        <p>There are no contacts!</p>
+      )}
+    </div>
   );
 };
