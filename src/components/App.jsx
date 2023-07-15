@@ -1,35 +1,20 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
 import Filter from 'components/Filter/Filter';
 import { nanoid } from 'nanoid';
-import { Notify } from 'notiflix';
-import { save, load } from '../localStorage';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useLocalStorage } from './service/useLocalStorage';
 
-const PB_KEY = 'phonebook_item_index';
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useLocalStorage('contacts', []);
+  const [filter, setFilter] = useState('');
 
-  componentDidMount() {
-    const savedContacts = load(PB_KEY);
-    this.setState({ contacts: savedContacts || [] });
-  }
-
-  componentDidUpdate(_, prevState) {
-    const { contacts } = this.state;
-    if (prevState.contacts.length !== contacts.length) {
-      save(PB_KEY, contacts);
-    }
-  }
-
-  createPhoneBookEntry = data => {
+  const createPhoneBookEntry = data => {
     const normalizedData = data.name.toLowerCase();
-    const { contacts } = this.state;
     if (contacts.some(({ name }) => name.toLowerCase() === normalizedData)) {
-      Notify.failure('Such a contact already exists!');
+      toast('Such a contact already exists!');
       return;
     }
 
@@ -38,49 +23,47 @@ export class App extends Component {
       id: nanoid(),
     };
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newPhoneBookEntry],
-    }));
+    setContacts(prevContacts => [...prevContacts, newPhoneBookEntry]);
   };
 
-  deletePhoneBookEntry = entryId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== entryId),
-    }));
-  };
-
-  handleSearchByName = ({ target: { value } }) => {
-    this.searchContactByName(value);
-  };
-
-  searchContactByName = contactName => {
-    this.setState({ filter: contactName });
-  };
-
-  render() {
-    const { contacts, filter } = this.state;
-    const normalizedFilter = filter.toLowerCase();
-    const filteredContacts = contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
+  const deletePhoneBookEntry = entryId => {
+    setContacts(prevContacts =>
+      prevContacts.filter(prevContact => prevContact.id !== entryId)
     );
+  };
 
-    return (
+  const handleSearchByName = ({ target: { value } }) => {
+    searchContactByName(value);
+  };
+
+  const searchContactByName = contactName => {
+    setFilter(contactName);
+  };
+
+  const normalizedFilter = filter.toLowerCase();
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(normalizedFilter)
+  );
+
+  return (
+    <>
       <div style={{ padding: '20px' }}>
+        <ToastContainer />
         <h1>Phonebook</h1>
-        <ContactForm createPhoneBookEntry={this.createPhoneBookEntry} />
+        <ContactForm createPhoneBookEntry={createPhoneBookEntry} />
         <h2>Contacts</h2>
-        {this.state.contacts.length ? (
+        {contacts.length ? (
           <>
-            <Filter onChange={this.handleSearchByName} />
+            <Filter onChange={handleSearchByName} />
             <ContactList
               contacts={filteredContacts}
-              deletePhoneBookEntry={this.deletePhoneBookEntry}
+              deletePhoneBookEntry={deletePhoneBookEntry}
             />
           </>
         ) : (
           <p>There are no contacts!</p>
         )}
       </div>
-    );
-  }
-}
+    </>
+  );
+};
