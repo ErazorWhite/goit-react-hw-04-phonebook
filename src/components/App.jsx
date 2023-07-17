@@ -5,7 +5,7 @@ import Filter from 'components/Filter/Filter';
 import { nanoid } from 'nanoid';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useLocalStorage } from './service/useLocalStorage';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 export const App = () => {
   const [contacts, setContacts] = useLocalStorage('contacts', []);
